@@ -1,5 +1,3 @@
-# main.tf
-
 # ----------------------------------------------------
 # 1. Configuraciones de AWS
 # ----------------------------------------------------
@@ -23,9 +21,9 @@ provider "aws" {
 
 # VPC
 resource "aws_vpc" "app_vpc" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+  cidr_block            = "10.0.0.0/16"
+  enable_dns_hostnames  = true
+  enable_dns_support    = true
 
   tags = {
     Name = "AppVPC-Distribuida"
@@ -52,7 +50,7 @@ resource "aws_subnet" "public" {
   cidr_block        = cidrsubnet(aws_vpc.app_vpc.cidr_block, 8, count.index)
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
-  # Permitir asignación automática de IP pública para que las instancias puedan salir a Internet
+  # Permitir asignación automática de IP pública
   map_public_ip_on_launch = true
 
   tags = {
@@ -134,11 +132,11 @@ resource "aws_security_group" "app_sg" {
 
 # Load Balancer (Application Load Balancer - ALB)
 resource "aws_lb" "app_lb" {
-  name               = "app-balancer"
-  internal           = false
-  load_balancer_type = "application"
-  subnets            = [for subnet in aws_subnet.public : subnet.id]
-  security_groups    = [aws_security_group.lb_sg.id]
+  name                = "app-balancer"
+  internal            = false
+  load_balancer_type  = "application"
+  subnets             = [for subnet in aws_subnet.public : subnet.id]
+  security_groups     = [aws_security_group.lb_sg.id]
 
   tags = {
     Name = "AppALB"
@@ -174,21 +172,17 @@ resource "aws_lb_listener" "http_listener" {
   }
 }
 
-# Template File para User Data (Instalación de Apache)
-data "template_file" "user_data" {
-  template = file("${path.module}/user_data.sh")
-}
+# **ATENCIÓN: ELIMINAMOS EL BLOQUE 'data "template_file" "**
 
 # Launch Template (Plantilla para las instancias)
-# Este bloque corrige todos los errores de sintaxis HCL anteriores.
 resource "aws_launch_template" "app_lt" {
-  name_prefix   = "app-lt"
-  # **AMI CORRECTA PARA us-east-1**
-  image_id      = "ami-0019c8bbda361f500" 
-  instance_type = "t2.micro"
+  name_prefix     = "app-lt"
+  # AMI CORRECTA PARA us-east-1 (Amazon Linux 2)
+  image_id        = "ami-0019c8bbda361f500" 
+  instance_type   = "t2.micro"
 
-  # Script de instalación de Apache
-  user_data     = base64encode(data.template_file.user_data.rendered) 
+  # Script de instalación de Apache, cargado del archivo user_data.sh (Sintaxis corregida)
+  user_data       = base64encode(file("user_data.sh"))
   
   # Configuración de Red: Asociar IP pública y SG de la aplicación
   network_interfaces {
@@ -217,7 +211,7 @@ resource "aws_autoscaling_group" "app_asg" {
   vpc_zone_identifier       = [for subnet in aws_subnet.public : subnet.id]
   target_group_arns         = [aws_lb_target_group.app_tg.arn]
   
-  # Capacidad deseada, mínima y máxima
+  # Capacidad deseada, mínima y máxima (REQUISITO 3 a 4 INSTANCIAS)
   desired_capacity          = 3
   min_size                  = 3
   max_size                  = 4
