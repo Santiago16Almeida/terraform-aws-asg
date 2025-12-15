@@ -115,10 +115,27 @@ data "template_file" "user_data" {
 
 # Launch Template (Plantilla para las instancias)
 resource "aws_launch_template" "app_lt" {
-  # ... otras configuraciones
-  image_id      = "ami-0019c8bbda361f500"  # <<-- ¡CAMBIO CRÍTICO!
+  # Nombre y Tags
+  name_prefix   = "app-lt"
+  tags = {
+    Name = "AppLaunchTemplate"
+  }
+  
+  # Configuración de la Instancia
+  image_id      = "ami-0019c8bbda361f500" # AMI válida para us-east-1
   instance_type = "t2.micro"
-  # ...
+  
+  # Script de instalación de Apache
+  user_data     = base64encode(data.template_file.user_data.rendered) 
+  
+  # Configuración de Red (¡Aquí estaba el error de sintaxis!)
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.app_sg.id]
+  }
+
+  # Desactivar la asignación de claves SSH (para entornos Lab)
+  disable_api_termination = false 
 }
   
   # Asigna el SG que solo permite tráfico del LB
