@@ -219,9 +219,9 @@ resource "aws_autoscaling_group" "app_asg" {
   target_group_arns         = [aws_lb_target_group.app_tg.arn]
   
   # Capacidad deseada, mínima y máxima
-  desired_capacity          = 4
-  min_size                  = 4
-  max_size                  = 6
+  desired_capacity          = 3
+  min_size                  = 3
+  max_size                  = 4
   
   # Conexión a la plantilla de lanzamiento
   launch_template {
