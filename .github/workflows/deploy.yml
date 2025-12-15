@@ -23,6 +23,7 @@ jobs:
           # Estas variables deben ser configuradas como GitHub Secrets
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}  # <<-- ¡NUEVA LÍNEA CLAVE!
           aws-region: us-east-1 # Debe coincidir con tu variable.tf
 
       - name: Terraform Init
