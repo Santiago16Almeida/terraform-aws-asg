@@ -115,9 +115,11 @@ data "template_file" "user_data" {
 
 # Launch Template (Plantilla para las instancias)
 resource "aws_launch_template" "app_lt" {
-  name_prefix   = "app-lt"
-  image_id      = var.ami_id
-  instance_type = var.instance_type
+  # ... otras configuraciones
+  image_id      = "ami-0019c8bbda361f500"  # <<-- ¡CAMBIO CRÍTICO!
+  instance_type = "t2.micro"
+  # ...
+}
   
   # Asigna el SG que solo permite tráfico del LB
   network_interfaces {
